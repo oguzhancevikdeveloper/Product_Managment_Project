@@ -1,10 +1,14 @@
 ﻿using Business.Abstract;
 using Business.Constant;
+using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Validation;
+using Core.CrossCuttingConcerns.Validation;
 using Core.DataAccess.Utilities.Results;
 using DataAccess.Abstract;
 using DataAccess.Concrete.InMemory;
 using Entities.Concrete;
 using Entities.DTOs;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,31 +24,28 @@ namespace Business.Concrete
       _productDal = productDal;
     }
 
+    [ValidationAspect(typeof(ProductValidator))]
     public IResult Add(Product product)
     {
-            _productDal.Add(product);
-      if(product.ProductName.Length < 2)
-      {
-        return new ErrorResult(Messages.ProductNameInvalid);
-      }
+      _productDal.Add(product);
       return new SuccessResult(Messages.ProductAdded);
     }
 
     public IDataResult<List<Product>> GetAll()
     {
-      if(DateTime.Now.Hour == 22)
+      if (DateTime.Now.Hour == 11)
       {
         return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
       }
-      return new DataResult<List<Product>>(_productDal.GetAll(),true,Messages.ProductListed);
+      return new DataResult<List<Product>>(_productDal.GetAll(), true, Messages.ProductListed);
     }
-     
+
     public IDataResult<List<Product>> GetAllByCategoryId(int id)
     {
       return new SuccessDataResult<List<Product>>(_productDal.GetAll(p => p.CategoryId == id));
     }
 
-    public  IDataResult<List<Product>>  GetAllByUnitPrice(decimal min, decimal max)
+    public IDataResult<List<Product>> GetAllByUnitPrice(decimal min, decimal max)
     {
       return new SuccessDataResult<List<Product>>(_productDal.GetAll(p => p.UnitPrice >= min && p.UnitPrice <= max));
     }
